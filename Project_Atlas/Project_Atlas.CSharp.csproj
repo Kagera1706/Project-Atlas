@@ -77,12 +77,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\CameraMgr.cs" />
-    <Compile Include="Assets\GUIMgr.cs" />
-    <Compile Include="Assets\GameMgr.cs" />
-    <Compile Include="Assets\IPausable.cs" />
-    <Compile Include="Assets\Manager.cs" />
-    <Compile Include="Assets\Player.cs" />
+    <Compile Include="Assets\Scripts\Entities\Player.cs" />
+    <Compile Include="Assets\Scripts\Environment\Hex.cs" />
+    <Compile Include="Assets\Scripts\Environment\HexMap.cs" />
+    <Compile Include="Assets\Scripts\Environment\RNG.cs" />
+    <Compile Include="Assets\Scripts\Extensions\GOExtensions.cs" />
+    <Compile Include="Assets\Scripts\Extensions\LayerMaskExtension.cs" />
+    <Compile Include="Assets\Scripts\Interfaces\IMovable.cs" />
+    <Compile Include="Assets\Scripts\Interfaces\IPausable.cs" />
+    <Compile Include="Assets\Scripts\Managers\CameraMgr.cs" />
+    <Compile Include="Assets\Scripts\Managers\GUIMgr.cs" />
+    <Compile Include="Assets\Scripts\Managers\GameMgr.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>
