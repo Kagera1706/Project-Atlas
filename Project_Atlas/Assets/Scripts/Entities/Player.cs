@@ -12,7 +12,7 @@ public class PlayerAttributes
     public float rotationSpeed = 2f;
 }
 
-public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
+public class Player : MonoBehaviour, IMovable, ISelectable
 {
 	#region Attributes
 
@@ -57,11 +57,14 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
     
     public bool IsMoving { get; set; }
     public bool IsRotating { get; set; }
+    public bool IsSelected { get; set; }
 
     private Hex currentTile = null;
-    public Hex CurrentTile { get { return currentTile; } set { currentTile = value; } }
-
-    private bool pause = false;
+    public Hex CurrentTile
+    {
+        get { return currentTile; }
+        set { currentTile = value; }
+    }
 
     public delegate void OnValueChanged(int value);
     public event OnValueChanged OnHealthChanged;
@@ -72,7 +75,8 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
     [SerializeField]
     private Renderer rend = null;
     [SerializeField]
-    private Shader outlineShader = null;
+    private Material outlineMat = null;
+    public Material OutlineMat { get { return outlineMat; } set { outlineMat = value; } }
 
     #endregion
 
@@ -101,7 +105,8 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
         CurrentMana = MaxMana;
 
         rend = GetComponent<Renderer>();
-        outlineShader = Resources.Load<Shader>("Shaders/OutlineDiffuse");
+        //outlineShader = Shader.Find("Outlined/Outline Diffuse");//Resources.Load<Shader>("Shaders/OutlineDiffuse");
+        outlineMat = Resources.Load<Material>("Materials/OutlineMaterial");
     }
 
     void Start()
@@ -110,12 +115,14 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
         InitPosition();
 
         Camera.main.transform.position = CameraMgr.Instance.PlayerPos;
+        CurrentTile.Select();
+        //outlineMat.color = rend.material.color;
     }
 
 
     void Update()
     {
-		if (pause)
+		if (InputMgr.Instance.IsPaused)
 			return;
         
 
@@ -134,8 +141,6 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
         
         while (IsMoving = (transform.position != position))
         {
-            if (pause)
-                continue;
             float distance = Mathf.Abs((position - transform.position).magnitude);
             Vector3 nextPosition = distance < 0.1f ? position : (transform.position + direction.normalized * RealMoveSpeed);
             yield return new WaitForFixedUpdate();
@@ -154,8 +159,6 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
 
         while (IsRotating = (transform.rotation != rotation))
         {
-            if (pause)
-                continue;
             float angle = Mathf.Abs(Quaternion.Angle(transform.rotation, rotation));
             Quaternion nextRotation = angle < 1f ? rotation : Quaternion.Slerp(transform.rotation, rotation, RealRotSpeed);
             yield return new WaitForFixedUpdate();
@@ -170,7 +173,6 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
     /// <summary>
     /// Updates the transform
     /// </summary>
-    /// <param name="position"></param>
     void UpdateTransform(Vector3 position)
     {
         Vector3 direction = position - transform.position;
@@ -204,29 +206,44 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
         StartCoroutine(HexMap.Instance.UpdateTiles(hideRevealed));
     }
 
-	#endregion
+    #endregion
 
     #region Actions
+
+    /// <summary>
+    /// Assigns the current tile the player is on.
+    /// </summary>
+    public void InitPosition()
+    {
+        Ray ray = new Ray(transform.position, -transform.up);
+        RaycastHit hit;
+        if (!Physics.Raycast(ray, out hit))
+            return;
+        
+        CurrentTile = hit.collider.GetComponent<Hex>();
+    }
 
     /// <summary>
     /// Selects the player
     /// </summary>
     public void Select()
     {
-        Shader tempShader = rend.material.shader;
-        rend.material.shader = outlineShader;
-        outlineShader = tempShader;
+        Material otherMat = rend.material;
+        rend.material = outlineMat;
+        outlineMat = otherMat;
     }
 
     /// <summary>
     /// Selects a tile and moves the player if necessary
     /// </summary>
-    public void MoveToTile(GameObject tile)
+    public void MoveToTile(Hex tile)
     {
         if (IsMoving || IsRotating || CameraMgr.Instance.IsUpdating)
             return;
 
-        Vector3 position = tile.GetPosition();
+        CurrentTile.Select();
+        tile.Select();
+        Vector3 position = tile.Instance.GetPosition();
 
         //
         //List<GameObject> tilesOnTheWay = new List<GameObject>();
@@ -241,8 +258,8 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
         //    tilesOnTheWay.Add(rh.collider.gameObject);
         //}
 
+
         position.y = transform.position.y;
-        //
 
         if (position == transform.position)
             return;
@@ -255,23 +272,7 @@ public class Player : MonoBehaviour, IPausable, IMovable, ISelectable
 
 	#region Functions
 
-    public void InitPosition()
-    {
-        Ray ray = new Ray(transform.position, -transform.up);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
-            CurrentTile = hit.collider.GetComponent<Hex>();
-    }
 
-	public void Pause()
-	{
-		pause = true;
-	}
-
-	public void Resume()
-	{
-		pause = false;
-	}
 
     #endregion
 

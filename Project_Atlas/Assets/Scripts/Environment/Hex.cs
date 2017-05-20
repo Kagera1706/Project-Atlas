@@ -13,7 +13,7 @@ public class Hex : MonoBehaviour, ISelectable
     [SerializeField]
     private Renderer rend = null;
     [SerializeField]
-    private Shader outlineShader = null;
+    private Material outlineMat = null;
 
     public int Q { get; private set; } //column
     public int R { get; private set; } //row
@@ -33,6 +33,8 @@ public class Hex : MonoBehaviour, ISelectable
                 GetComponent<Renderer>().material = HexMap.Instance.TileMats[(int)tileType];
         }
     }
+
+    public bool IsSelected { get; set; }
 
     #region Instance
 
@@ -56,7 +58,14 @@ public class Hex : MonoBehaviour, ISelectable
     void Awake()
     {
         rend = GetComponent<Renderer>();
-        outlineShader = Resources.Load<Shader>("Shaders/OutlineDiffuse");
+        //outlineShader = Shader.Find("Outlined/Outline Diffuse");//Resources.Load<Shader>("Shaders/OutlineDiffuse");
+        
+    }
+
+    void Start()
+    {
+        outlineMat = Player.Instance.OutlineMat;
+        //outlineMat.color = rend.material.color;
     }
 
     #endregion
@@ -69,6 +78,9 @@ public class Hex : MonoBehaviour, ISelectable
 
     #region Actions
 
+    /// <summary>
+    /// Initializes hex data
+    /// </summary>
     public void Init(int q, int r, TileType type)
     {
         Q = q;
@@ -80,6 +92,9 @@ public class Hex : MonoBehaviour, ISelectable
         HexType = type;
     }
 
+    /// <summary>
+    /// Initializes position
+    /// </summary>
 	public void InitPosition()
     {
         float height = radius * 2;
@@ -96,15 +111,18 @@ public class Hex : MonoBehaviour, ISelectable
     /// </summary>
     public void Select()
     {
-        Shader tempShader = rend.material.shader;
-        rend.material.shader = outlineShader;
-        outlineShader = tempShader;
+        Material otherMat = rend.material;
+        rend.material = outlineMat;
+        outlineMat = otherMat;
     }
 
     #endregion
 
     #region Functions
 
+    /// <summary>
+    /// Returns the distance in tiles between this tile and the one given as parameter
+    /// </summary>
     public int DistanceTo(Hex hex)
     {
         //int abq = Mathf.Abs(Q - hex.Q);
@@ -126,11 +144,17 @@ public class Hex : MonoBehaviour, ISelectable
         return distance;
     }
 
-    public bool IsWithinRange(Hex hex, int limit)
+    /// <summary>
+    /// Checks if this tile is within the given hex range
+    /// </summary>
+    public bool IsWithinRange(Hex hex, int range)
     {
-        return Math.Abs(Q - hex.Q).IsWithin(0, limit) && Math.Abs(R - hex.R).IsWithin(0, limit) && Math.Abs(S - hex.S).IsWithin(0, limit);
+        return Math.Abs(Q - hex.Q).IsWithin(0, range) && Math.Abs(R - hex.R).IsWithin(0, range) && Math.Abs(S - hex.S).IsWithin(0, range);
     }
 
+    /// <summary>
+    /// Returns the hex name
+    /// </summary>
     public override string ToString()
     {
         return "Hex_" + Q + "_" + R;

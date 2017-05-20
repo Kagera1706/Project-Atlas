@@ -10,8 +10,13 @@ public class InputMgr : MonoBehaviour
     [SerializeField]
     private Player player = null;
 
-    private bool pause = false;
-
+    private bool pause;
+    public bool IsPaused
+    {
+        get { return pause; }
+        set { GUIMgr.Instance.DisplayPause(pause = value); }
+    }
+    
     #region Instance
 
     private static InputMgr instance = null;
@@ -66,6 +71,9 @@ public class InputMgr : MonoBehaviour
 	
 	public void CheckMouseInputs()
     {
+        if (IsPaused)
+            return;
+
         if(Input.GetKeyDown(KeyCode.Mouse0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -94,31 +102,26 @@ public class InputMgr : MonoBehaviour
                 return;
 
             GameObject selection = hit.collider.gameObject;
-            player.MoveToTile(selection);
+            Hex hex = selection.GetComponent<Hex>();
+            if (!hex)
+                return;
+
+            player.MoveToTile(hex);
         }
     }
 
     public void CheckKeyboardInputs()
     {
-
+        if (IsPaused)
+            return;
     }
 
-    public void CheckPause()
+    public void CheckPause(bool usedButton = false)
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) || usedButton)
         {
-            MonoBehaviour[] mbhs = FindObjectsOfType<MonoBehaviour>();
-            if (pause)
-            {
-                foreach (IPausable pausable in mbhs)
-                    pausable.Resume();
-            }
-            else
-            {
-                foreach (IPausable pausable in mbhs)
-                    pausable.Pause();
-            }
-            pause = !pause;
+            IsPaused = !IsPaused;
+            Time.timeScale = IsPaused ? 0f : 1f;
         }
     }
 	

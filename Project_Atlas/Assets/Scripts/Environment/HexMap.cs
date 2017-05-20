@@ -28,8 +28,8 @@ public class HexMap : MonoBehaviour
     private Hex[,] hexes = null;
     public Hex[,] Map { get { return hexes; } }
 
-    [SerializeField]
-    private CameraMgr cam = null;
+    //[SerializeField]
+    //private CameraMgr cam = null;
     [SerializeField]
     private Player player = null;
     [SerializeField]
@@ -63,7 +63,7 @@ public class HexMap : MonoBehaviour
     void Awake()
     {
         player = Player.Instance;
-        cam = CameraMgr.Instance;
+        //cam = CameraMgr.Instance;
         GenerateHexes();
     }
 
