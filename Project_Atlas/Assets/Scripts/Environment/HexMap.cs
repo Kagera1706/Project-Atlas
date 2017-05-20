@@ -6,15 +6,17 @@ using UnityEngine;
 [Serializable]
 public class HexMapData
 {
-    public int width = 1;
-    public int height = 1;
+    //public int width = 1;
+    //public int height = 1;
+    public int mapSize = 1;
+    public int tilesWithin = 3;
     public GameObject tilePrefab = null;
     public Material[] tileMats = null;
 }
 
 public enum TileType
 {
-    Grass, Plains, Water, Mountain, Ground
+    Grass, Ground, Mountain, Plains, Water
 }
 
 public class HexMap : MonoBehaviour 
@@ -23,46 +25,115 @@ public class HexMap : MonoBehaviour
 
     [SerializeField]
     private HexMapData mapData;
+    private Hex[,] hexes = null;
+    public Hex[,] Map { get { return hexes; } }
 
-    public int Width { get { return mapData.width; } }
-    public int Height { get { return mapData.height; } }
+    [SerializeField]
+    private CameraMgr cam = null;
+    [SerializeField]
+    private Player player = null;
+    [SerializeField]
+    private bool hideOnStart = false;
+
+    public int MapSize { get { return mapData.mapSize; } }
+    public int HalfMap { get { return MapSize / 2; } }
+    public int TilesWithin { get { return mapData.tilesWithin; } }
     public GameObject TilePrefab { get { return mapData.tilePrefab; } }
     public Material[] TileMats { get { return mapData.tileMats; } }
 
-    private TileType tileType = TileType.Ground;
+    #region Instance
+
+    private static HexMap instance = null;
+    public static HexMap Instance
+    {
+        get
+        {
+            if (!instance)
+                instance = FindObjectOfType<HexMap>();
+            return instance;
+        }
+    }
 
     #endregion
 
+    
+    #endregion
     #region UnityFunctions
 
-    void Start () 
-	{
+    void Awake()
+    {
+        player = Player.Instance;
+        cam = CameraMgr.Instance;
         GenerateHexes();
-	}
+    }
+
+    void Start ()
+    {
+    }
+
+    #endregion
+
+    #region Coroutines
+
+    /// <summary>
+    /// Updates the tiles on the map
+    /// </summary>
+    public IEnumerator UpdateTiles(bool hideRevealed)
+    {
+        yield return new WaitWhile(() => player.IsMoving);
+
+        DisplaySurroundingTiles(hideRevealed);
+    }
 
     #endregion
 
     #region Actions
 
+    /// <summary>
+    /// Generates the map and displays it
+    /// </summary>
     public void GenerateHexes()
     {
-        for (int column = 0; column < Width; column++)
+        TileType[] hexTypes = (TileType[])Enum.GetValues(typeof(TileType));
+        hexes = new Hex[MapSize, MapSize];
+        for (int column = 0; column < MapSize; column++)
         {
-            for (int row = 0; row < Height; row++)
+            for (int row = 0; row < MapSize; row++)
             {
-                Hex hex = new Hex(column, row);
-                
-                GameObject tile = 
+                GameObject tile =
                     Instantiate
                     (
-                        TilePrefab, 
-                        hex.Position() + transform.position, 
-                        transform.rotation, 
+                        TilePrefab,
+                        transform.position,
+                        transform.rotation,
                         transform
                     );
-                tile.name = hex.ToString();
-                tile.GetComponentInChildren<Renderer>().material = RNG.Generate(TileMats);
+
+                TileType hexType = RNG.Generate(hexTypes);
+                hexes[column, row] = tile.GetComponent<Hex>();
+                hexes[column, row].Init(column, row, hexType);
             }
+        }
+
+        Player.Instance.CurrentTile = hexes[HalfMap, HalfMap];
+        StartCoroutine(UpdateTiles(hideOnStart));
+    }
+
+    /// <summary>
+    /// Display the tiles surrounding the player
+    /// </summary>
+    public void DisplaySurroundingTiles(bool hideRevealed)
+    {
+        if (Map.Length == 0)
+            return;
+
+        Hex playerTile = player.CurrentTile;
+        foreach (Hex tile in Map)
+        {
+            if(hideRevealed)
+                tile.gameObject.SetActive(playerTile.IsWithinRange(tile, TilesWithin));
+            else if(!tile.gameObject.activeSelf)
+                tile.gameObject.SetActive(playerTile.IsWithinRange(tile, TilesWithin));
         }
     }
 
@@ -70,7 +141,7 @@ public class HexMap : MonoBehaviour
 
     #region Functions
 
-
+   
 
     #endregion
 }

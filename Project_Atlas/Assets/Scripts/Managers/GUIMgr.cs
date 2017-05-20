@@ -10,15 +10,6 @@ public class GUIMgr : MonoBehaviour
 
     [SerializeField]
     private Player player = null;
-    [SerializeField]
-    private GameObject playerStats = null;
-    [SerializeField]
-    private GameObject playerSkillBar = null;
-
-    [SerializeField]
-    private Slider hpBar = null;
-    [SerializeField]
-    private Slider manaBar = null;
 
     #region Instance
 
@@ -41,13 +32,13 @@ public class GUIMgr : MonoBehaviour
 
     void Awake ()
 	{
-        InitGUI();
-	}
+
+    }
 
 	void Start () 
 	{
-        Init();
-	}
+
+    }
 	
 	void Update () 
 	{
@@ -70,30 +61,7 @@ public class GUIMgr : MonoBehaviour
 
     #region Functions
 
-    void InitGUI()
-    {
-        //foreach (GameObject go in GameObject.FindGameObjectsWithTag("Info"))
-        //{
-        //    switch (go.name)
-        //    {
-        //        case "PlayerStats":
-        //            playerStats = go;
-        //            break;
-        //        case "PlayerSkillBar":
-        //            playerSkillBar = go;
-        //            break;
-        //        default:
-        //            break;
-        //    }
-        //}
-    }
 
-    void Init()
-    {
-        player.OnHealthChanged += (val) => { hpBar.value = val; Debug.Log("Did 1"); };
-        player.OnManaChanged += (val) => { manaBar.value = val; Debug.Log("Did 2"); };
-        Debug.Log("Its all fine");
-    }
 
     #endregion
 }
