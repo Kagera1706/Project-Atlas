@@ -9,24 +9,25 @@ public class PlayerAttributes
 	public int health = 100;
 	public int mana = 50;
 	public float moveSpeed = 10f;
-    public float rotationSpeed = 2f;
+    public float rotationSpeed = 5f;
 }
 
 public class Player : MonoBehaviour, IMovable, ISelectable
 {
-	#region Attributes
+    #region Attributes
 
-	[SerializeField]
-	private PlayerAttributes attributes;
+    [SerializeField]
+    private PlayerAttributes attributes;
+    public PlayerAttributes Attributes { get { return attributes; } set { attributes = value; } }
 
-	private int currentHealth = 0;
+    private int currentHealth = 0;
 	private int currentMana = 0;
 
-	public int MaxHealth { get { return attributes.health; } }
-    public int MaxMana { get { return attributes.mana; } }
-    public float MoveSpeed { get { return attributes.moveSpeed; } }
+	public int MaxHealth { get { return Attributes.health; } set { Attributes.health = value; } }
+    public int MaxMana { get { return Attributes.mana; } set { Attributes.mana = value; } }
+    public float MoveSpeed { get { return Attributes.moveSpeed; } set { Attributes.moveSpeed = value; } }
     public float RealMoveSpeed { get { return MoveSpeed * Time.deltaTime; } }
-    public float RotSpeed { get { return attributes.rotationSpeed; } }
+    public float RotSpeed { get { return Attributes.rotationSpeed; } set { Attributes.rotationSpeed = value; } }
     public float RealRotSpeed { get { return RotSpeed * Time.deltaTime; } }
 
     public int CurrentHealth
@@ -78,6 +79,10 @@ public class Player : MonoBehaviour, IMovable, ISelectable
     private Material outlineMat = null;
     public Material OutlineMat { get { return outlineMat; } set { outlineMat = value; } }
 
+    [SerializeField]
+    private bool useOutliner = false;
+    public bool UseOutliner { get { return useOutliner; } set { useOutliner = value; } }
+    
     #endregion
 
     #region Instance
@@ -101,9 +106,6 @@ public class Player : MonoBehaviour, IMovable, ISelectable
 
     void Awake()
     {
-        CurrentHealth = MaxHealth;
-        CurrentMana = MaxMana;
-
         rend = GetComponent<Renderer>();
         //outlineShader = Shader.Find("Outlined/Outline Diffuse");//Resources.Load<Shader>("Shaders/OutlineDiffuse");
         outlineMat = Resources.Load<Material>("Materials/OutlineMaterial");
@@ -111,11 +113,14 @@ public class Player : MonoBehaviour, IMovable, ISelectable
 
     void Start()
     {
+        CurrentHealth = MaxHealth;
+        CurrentMana = MaxMana;
+
         transform.position = CurrentTile.Instance.GetPosition() - HexMap.Instance.transform.position;
         InitPosition();
 
         Camera.main.transform.position = CameraMgr.Instance.PlayerPos;
-        CurrentTile.Select();
+        //CurrentTile.Select();
         //outlineMat.color = rend.material.color;
     }
 
@@ -228,6 +233,9 @@ public class Player : MonoBehaviour, IMovable, ISelectable
     /// </summary>
     public void Select()
     {
+        if (!UseOutliner)
+            return;
+
         Material otherMat = rend.material;
         rend.material = outlineMat;
         outlineMat = otherMat;
@@ -240,9 +248,7 @@ public class Player : MonoBehaviour, IMovable, ISelectable
     {
         if (IsMoving || IsRotating || CameraMgr.Instance.IsUpdating)
             return;
-
-        CurrentTile.Select();
-        tile.Select();
+        
         Vector3 position = tile.Instance.GetPosition();
 
         //

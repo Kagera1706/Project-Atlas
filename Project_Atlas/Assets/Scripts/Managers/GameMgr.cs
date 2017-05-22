@@ -9,6 +9,8 @@ public class GameMgr : MonoBehaviour
     private GameObject player = null;
     public GameObject Player { get { return player; } set { player = value; } }
 
+    public Hex SelectedTile { get; set; }
+
     #region Instance
 
     private static GameMgr instance = null;

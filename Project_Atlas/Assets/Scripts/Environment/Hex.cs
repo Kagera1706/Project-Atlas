@@ -107,7 +107,7 @@ public class Hex : MonoBehaviour, ISelectable
     }
 
     /// <summary>
-    /// Selects the tile
+    /// Selects/Unselects the tile
     /// </summary>
     public void Select()
     {
